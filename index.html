@@ -226,48 +226,44 @@
 		</div>
 
 		<script>
-			function generate() {
-				var prompt = $("#prompt").val();
-				var category = $("#storyCategory").val();
-				var language = $("#languageSelection").val(); // Get the value of the selected option
+			import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
+import { AzureKeyCredential } from "@azure/core-auth";
 
-				var userPrompt = `Write a complete responsive code of the Â "${prompt}" tool with colorful styling and all its features use any free library if required to making this tool in HTML and CSS with JavaScript`;
+const token = process.env["GITHUB_TOKEN"];
+const endpoint = "https://models.github.ai/inference";
+const model = "openai/gpt-4.1";
 
-				$('#progressOverlay').show(); // Show progress overlay
+export async function main() {
 
-                                                                        // how to get API key
-                                                                        // https://allfreestore.com/wp-content/uploads/2024/03/Get%20OpenAI%20API%20Key.mp4
-				var apiKey = '240
-				var apiKey = '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'; // Replace with your actual OpenAI API key'; // Replace with your actual OpenAI API key
-				var apiUrl = 'https://github.com/settings/tokens';
+  const client = ModelClient(
+    endpoint,
+    new AzureKeyCredential(token),
+  );
 
-				var requestBody = {
-					model: 'gpt-3.5-turbo',
-					messages: [{
-						role: 'user',
-						content: userPrompt
-					}],
-					temperature: 0.7
-				};
+  const response = await client.path("/chat/completions").post({
+    body: {
+      messages: [
+        { role:"system", content: "You are a helpful assistant." },
+        { role:"user", content: "What is the capital of France?" }
+      ],
+      temperature: 1.0,
+      top_p: 1.0,
+      model: model
+    }
+  });
 
-				$.ajax({
-					type: 'POST',
-					url: apiUrl,
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': 'Bearer ' + apiKey
-					},
-					data: JSON.stringify(requestBody),
-					success: function(response) {
-						$('#progressOverlay').hide(); // Hide progress overlay
-						addTypewriterEffect(response.choices[0].message.content, 'chatBody');
-					},
-					error: function(error) {
-						$('#progressOverlay').hide(); // Hide progress overlay on error
-						console.error('Error generating privacy policy:', error);
-					}
-				});
-			}
+  if (isUnexpected(response)) {
+    throw response.body.error;
+  }
+
+  console.log(response.body.choices[0].message.content);
+}
+
+main().catch((err) => {
+  console.error("The sample encountered an error:", err);
+});
+
+
 
 			function formatResponseText(text) {
 				// Convert URLs into hyperlinks
