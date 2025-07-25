@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>HTML Tool Maker</title>
+		<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+		<style>
+			.regenerateIcon {
+				cursor: pointer;
+				display: inline-block;
+				margin-left: 10px;
+				font-size: 20px;
+				/* Adjust size as needed */
+			}
+
+			body {
+				font-family: 'Arial', sans-serif;
+				background-color: #f2f2f2;
+				margin: 0;
+				padding: 20px;
+				box-sizing: border-box;
+			}
+
+			#chatContainer {
+				background-color: #fff;
+				border-radius: 8px;
+				overflow: hidden;
+				width: 100%;
+				max-width: 800px;
+				margin: auto;
+				box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+			}
+
+
+
+			#chatHeader {
+				width: 100%;
+				padding: 10px;
+				margin-bottom: 20px;
+				border-radius: 8px;
+				border: none;
+				color: white;
+				text-align: center;
+				font-size: 16px;
+
+				cursor: pointer;
+				background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+				transition: all 0.3s ease;
+				text-decoration: none;
+				/* Remove underline from download link */
+				display: inline-block;
+				/* Needed for anchor to behave like a button */
+				text-align: center;
+				/* Ensure text is centered in download link */
+			}
+
+			#chatBody {
+				padding: 20px;
+				max-height: 300px;
+				overflow-y: auto;
+			}
+
+			.messageContainer {
+				display: flex;
+				justify-content: flex-end;
+				margin-bottom: 10px;
+			}
+
+			.message {
+				background-color: #e2f0cb;
+				padding: 10px;
+				border-radius: 5px;
+				max-width: 70%;
+				word-wrap: break-word;
+			}
+
+			#prompt {
+				width: calc(100% - 40px - 10px);
+				margin: 10px 20px;
+				padding: 12px;
+				border-radius: 5px;
+				border: 1px solid #ccc;
+			}
+
+			button {
+				width: 100%;
+				padding: 10px;
+				margin-bottom: 20px;
+				border-radius: 8px;
+				border: none;
+				color: white;
+				text-align: center;
+				font-size: 15px;
+
+				cursor: pointer;
+				background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+				transition: all 0.3s ease;
+				text-decoration: none;
+				/* Remove underline from download link */
+				display: inline-block;
+				/* Needed for anchor to behave like a button */
+				text-align: center;
+				/* Ensure text is centered in download link */
+			}
+
+			button:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+			}
+
+			#copyButton {
+				background-color: #007bff;
+			}
+
+			#progressOverlay {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.5);
+				z-index: 1000;
+			}
+
+			#progressOverlay > div {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				color: white;
+				font-size: 20px;
+			}
+
+			/* Add styles for formatted text */
+			.formatted-text {
+				white-space: pre-wrap;
+				/* Keeps white space and line breaks */
+			}
+
+			.formatted-text a {
+				color: #007bff;
+				text-decoration: none;
+			}
+
+			.formatted-text a:hover {
+				text-decoration: underline;
+			}
+
+			/* Dropdown Styles */
+			#storyCategory,
+			#languageSelection {
+				width: calc(50% - 25px);
+				/* Adjust width to fit side by side with some space */
+				padding: 10px;
+				margin: 10px;
+				border-radius: 5px;
+				border: 1px solid #ccc;
+				background-color: #fff;
+				font-family: 'Arial', sans-serif;
+				font-size: 16px;
+				box-sizing: border-box;
+				/* Ensure padding and border are included in width */
+				display: inline-block;
+				/* Display side by side */
+				cursor: pointer;
+			}
+
+			#storyCategory:disabled,
+			#languageSelection:disabled {
+				background-color: #e9ecef;
+				cursor: not-allowed;
+			}
+
+			/* Adjust margin for the prompt to align with the new dropdowns */
+			#prompt {
+				margin: 0 10px 10px 10px;
+			}
+
+			/* Style adjustments for button to align with the new layout */
+			button {
+				width: calc(100% - 20px);
+				margin: 10px;
+			}
+
+			/* Ensure the container width accommodates new elements */
+			#chatContainer {
+				padding-bottom: 10px;
+				/* Add some padding at the bottom */
+			}
+
+			.message.code {
+				background-color: #f5f5f5;
+				/* Light grey background */
+				color: #333;
+				/* Darker text for contrast */
+				font-family: monospace;
+				/* Monospace font for code-like appearance */
+				white-space: pre-wrap;
+				/* Allows text to wrap and preserves formatting */
+				word-wrap: break-word;
+				/* Allows long lines to break and wrap to the next line */
+				padding: 10px;
+				/* Padding inside the preformatted text block */
+				border-radius: 5px;
+				/* Rounded corners like other messages */
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div id="chatContainer">
+			<div id="chatHeader">HTML Tool Maker</div>
+
+
+			<textarea id="prompt" placeholder="Type a HTML tool name..." rows="3"></textarea>
+			<button id="generate" onclick="generate()">Write HTML Tool Code</button>
+			<div id="chatBody"></div>
+		</div>
+
+		<div id="progressOverlay">
+			<div>Thinking...</div>
+		</div>
+
+		<script>
+			function generate() {
+				var prompt = $("#prompt").val();
+				var category = $("#storyCategory").val();
+				var language = $("#languageSelection").val(); // Get the value of the selected option
+
+				var userPrompt = `Write a complete responsive code of the Â "${prompt}" tool with colorful styling and all its features use any free library if required to making this tool in HTML and CSS with JavaScript`;
+
+				$('#progressOverlay').show(); // Show progress overlay
+
+                                                                        // how to get API key
+                                                                        // https://allfreestore.com/wp-content/uploads/2024/03/Get%20OpenAI%20API%20Key.mp4
+				var apiKey = 'your_api_key'; // Replace with your actual OpenAI API key
+				var apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+				var requestBody = {
+					model: 'gpt-3.5-turbo',
+					messages: [{
+						role: 'user',
+						content: userPrompt
+					}],
+					temperature: 0.7
+				};
+
+				$.ajax({
+					type: 'POST',
+					url: apiUrl,
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': 'Bearer ' + apiKey
+					},
+					data: JSON.stringify(requestBody),
+					success: function(response) {
+						$('#progressOverlay').hide(); // Hide progress overlay
+						addTypewriterEffect(response.choices[0].message.content, 'chatBody');
+					},
+					error: function(error) {
+						$('#progressOverlay').hide(); // Hide progress overlay on error
+						console.error('Error generating privacy policy:', error);
+					}
+				});
+			}
+
+			function formatResponseText(text) {
+				// Convert URLs into hyperlinks
+				text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+
+				// Detect headings and make them bold
+				text = text.replace(/^##\s?(.+)/gm, '<strong>$1</strong>');
+
+				// Replace newline characters with <p> tags for paragraphs
+				// Â text = text.replace(/\n/g, '</p><p>');
+
+				// Wrap the text in <p> tags to ensure it starts and ends as a paragraph
+				return '<p>' + text + '</p>';
+			}
+
+			function addTypewriterEffect(text, elementId) {
+				var container = $('<div class="messageContainer"></div>').appendTo('#' + elementId);
+				var message = $('<div class="message code"></div>').appendTo(container);
+
+				var i = 0;
+				var speed = 10; // Typing speed in milliseconds
+
+				function typeWriter() {
+					if (i < text.length) {
+						var charToAdd = text.charAt(i);
+
+						if (text.substring(i).startsWith('<span')) {
+							// If we're at the start of a span tag, append the entire tag at once
+							var tagEnd = text.indexOf('>', i) + 1;
+							charToAdd = text.substring(i, tagEnd);
+							i = tagEnd;
+						} else if (text.charAt(i) === '<' && text.substring(i).startsWith('</span')) {
+							// If we're at the end of a span tag, append the entire closing tag
+							var tagEnd = text.indexOf('>', i) + 1;
+							charToAdd = text.substring(i, tagEnd);
+							i = tagEnd;
+						} else {
+							// For regular characters, just increment i
+							i++;
+						}
+
+						message.append(charToAdd);
+						setTimeout(typeWriter, speed);
+					} else {
+						// Once the text is fully displayed, add the regenerate icon
+						var regenerateIcon = $('<div class="regenerateIcon">&#x21bb;</div>'); // Use a suitable unicode character for the icon
+						regenerateIcon.appendTo(container);
+						regenerateIcon.click(function() {
+							$('#' + elementId).html(''); // Clear the previous messages
+							generate(); // Call the generate function to regenerate content
+						});
+					}
+				}
+
+				typeWriter();
+			}
+
+
+			function formatResponseText(text) {
+				text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+				text = text.replace(/^##\s?(.+)/gm, '<strong>$1</strong>');
+				text = text.replace(/^(\s*(?:-|\*|\d+\.)\s+.+)$/gm, '$1<br>');
+				return text;
+			}
+		</script>
+		<style>
+			.regenerateIcon,
+			.copyIcon {
+				cursor: pointer;
+				display: inline-block;
+				margin-left: 10px;
+				font-size: 20px;
+				/* Adjust size as needed */
+			}
+
+			.userMessage .message {
+				background-color: #e2f0cb;
+			}
+
+			#progressOverlay {
+				display: none;
+				/* Initially hidden */
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.5);
+				z-index: 1000;
+			}
+
+			#progressOverlay > div {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				color: white;
+				font-size: 20px;
+			}
+
+			/* Updated styles for code display */
+			.message.code {
+				background-color: #000;
+				/* Black background */
+				color: #fff;
+				/* Default text color - white */
+				font-family: monospace;
+				/* Monospace font for code-like appearance */
+				white-space: pre-wrap;
+				/* Allows text to wrap and preserves formatting */
+				word-wrap: break-word;
+				/* Allows long lines to break and wrap to the next line */
+				padding: 10px;
+				/* Padding inside the code block */
+				border-radius: 5px;
+				/* Rounded corners */
+			}
+
+			/* Styles for simulated syntax highlighting */
+			.code-keyword {
+				color: #569CD6;
+			}
+
+			/* Blue for keywords */
+			.code-string {
+				color: #CE9178;
+			}
+
+			/* Orange for strings */
+			.code-comment {
+				color: #6A9955;
+			}
+
+			/* Green for comments */
+		</style>
+		<div id="progressOverlay">
+			<div>Thinking...</div>
+		</div>
+
+		</script>
+	</body>
+
+</html>
